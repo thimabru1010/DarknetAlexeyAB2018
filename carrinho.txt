@@ -1,0 +1,4 @@
+carrinho: 96% 	(left_x:  282   top_y:  312   width:  115   height:  176)
+carrinho: 80% 	(left_x:   41   top_y:  325   width:  141   height:  158)
+carrinho: 72% 	(left_x:  401   top_y:  460   width:  237   height:  238)
+carrinho: 31% 	(left_x:  695   top_y:  107   width:   32   height:   53)
