@@ -453,29 +453,37 @@ void draw_detections_cv_v3(IplImage* show_img, detection *dets, int num, float t
     char str_filename[500];
     strcpy(str_filename, glob_filename);
     printf("%s \n", str_filename);
-    char delim[]="_/";
+    char delim[]="./";
     char *ptr = strtok(str_filename, delim);
     ptr = strtok(NULL, delim);
+    //ptr = strtok(NULL, delim);
+    printf("%s \n", glob_filename);
+    printf("%s \n", str_filename);
     printf("%s \n", ptr);
 
     //Define o nome do arquivo txt contendo os bounding boxes de acordo com a camera e frame
     char fptxt_name[500];
     strcpy(fptxt_name, "result_txt/carrinho_");
     strcat(fptxt_name, ptr);
-    strcat(fptxt_name, "_");
+    //strcat(fptxt_name, ".avi");
     char str_frame_id[500];
     sprintf(str_frame_id, "%d", frame_id);
+    strcat(fptxt_name, "_");
     strcat(fptxt_name, str_frame_id);
+    strcat(fptxt_name, ".txt");
 
-    fp = fopen (fptxt_name,"w");
+    printf(fptxt_name);
+
+
 
     //Define o nome das imagens salvas de acordo com a camera e frame
     char fpimg_name[500];
     strcpy(fpimg_name, "result_img/carrinho_");
     strcat(fpimg_name, ptr);
-    strcat(fpimg_name, "_");
+   // strcat(fpimg_name, "_");
     // char str_frame_id[500];
     // sprintf(str_frame_id, "%d", frame_id);
+    strcat(fpimg_name, "_");
     strcat(fpimg_name, str_frame_id);
     strcat(fpimg_name, ".jpg");
     printf(fpimg_name);
@@ -543,21 +551,25 @@ void draw_detections_cv_v3(IplImage* show_img, detection *dets, int num, float t
             // you should create directory: result_img
             static int copied_frame_id = -1;
             static IplImage* copy_img = NULL;
-            if (copied_frame_id != frame_id) {
-                copied_frame_id = frame_id;
-                if(copy_img == NULL) copy_img = cvCreateImage(cvSize(show_img->width, show_img->height), show_img->depth, show_img->nChannels);
-                cvCopy(show_img, copy_img, 0);
+            if( frame_id % 8 == 0)
+            {
+                if (copied_frame_id != frame_id) 
+                {
+                    copied_frame_id = frame_id;
+                    if(copy_img == NULL) copy_img = cvCreateImage(cvSize(show_img->width, show_img->height), show_img->depth, show_img->nChannels);
+                    cvCopy(show_img, copy_img, 0);
 
-                static int img_id = 0;
-                img_id++;
-                char image_name[1024];
-                //sprintf(image_name, "result_img/carrinho_img_%d_%d_%d.jpg", frame_id, img_id, class_id);
-                strcpy(image_name, fpimg_name);
-                //CvRect rect = cvRect(pt1.x, pt1.y, pt2.x - pt1.x, pt2.y - pt1.y);
-                //cvSetImageROI(copy_img, rect);
-                //cvSaveImage(image_name, copy_img, 0);
-                cvSaveImage(image_name, copy_img, 0);
-                cvResetImageROI(copy_img);
+                    static int img_id = 0;
+                    img_id++;
+                    char image_name[1024];
+                    //sprintf(image_name, "result_img/carrinho_img_%d_%d_%d.jpg", frame_id, img_id, class_id);
+                    strcpy(image_name, fpimg_name);
+                    //CvRect rect = cvRect(pt1.x, pt1.y, pt2.x - pt1.x, pt2.y - pt1.y);
+                    //cvSetImageROI(copy_img, rect);
+                    //cvSaveImage(image_name, copy_img, 0);
+                    cvSaveImage(image_name, copy_img, 0);
+                    cvResetImageROI(copy_img);
+                }
             }
 
 			float const font_size = show_img->height / 1000.F;
@@ -577,16 +589,24 @@ void draw_detections_cv_v3(IplImage* show_img, detection *dets, int num, float t
 			color.val[1] = green * 256;
 			color.val[2] = blue * 256;
 
+            static int old_frame_id = 0;
 			cvRectangle(show_img, pt1, pt2, color, width, 8, 0);
 			if (ext_output)
             {
 				printf("\t(left_x: %4.0f   top_y: %4.0f   width: %4.0f   height: %4.0f)\n",
 					(float)left, (float)top, b.w*show_img->width, b.h*show_img->height);
-                printf("%f \n", dw);
-                printf("%f \n", dh);
-                fprintf(fp, "\t%d %.20f %.20f %.20f %.20f\n",class_id, (float)b_x_center/dw, (float)b_y_center/dh, (float)b_width/dw, (float)b_height/dh);
+                //printf("%f \n", dw);
+                //printf("%f \n", dh);
                 printf("\tclass_id: %d  x_center: %.20f   y_center: %.20f   obj_width: %.20f   obj_height: %.20f\n",class_id,
 				 	(float)b_x_center/dw, (float)b_y_center/dh, (float)b_width/dw, (float)b_height/dh);
+                //printf("%f \t %f", dets[0], dets[0].prob[0]);
+                 if (frame_id % 8 == 0) 
+                {
+                    fp = fopen (fptxt_name,"w");
+                    fprintf(fp, "%d %.20f %.20f %.20f %.20f\n",class_id, (float)b_x_center/dw, (float)b_y_center/dh, (float)b_width/dw, (float)b_height/dh);
+                    fclose(fp);
+                }
+                
             }
 			else
 				printf("\n");
@@ -599,7 +619,6 @@ void draw_detections_cv_v3(IplImage* show_img, detection *dets, int num, float t
 			cvPutText(show_img, labelstr, pt_text, &font, black_color);
 		}
 	}
-    fclose(fp);
 }
 
 void draw_detections_cv(IplImage* show_img, int num, float thresh, box *boxes, float **probs, char **names, image **alphabet, int classes)
